@@ -7,11 +7,19 @@ from dateutil.tz.tz import tzlocal
 
 class EcsClient(object):
     def __init__(self, access_key_id=None, secret_access_key=None,
-                 region=None, profile=None):
+                 region=None, profile=None, assume_role=None):
         session = Session(aws_access_key_id=access_key_id,
                           aws_secret_access_key=secret_access_key,
                           region_name=region,
                           profile_name=profile)
+        if assume_role:
+            client = session.client('sts')
+            sts_credentials = client.assume_role(RoleArn=assume_role, RoleSessionName='EcsClient')
+            session = Session(aws_access_key_id=sts_credentials['Credentials']['AccessKeyId'],
+                              aws_secret_access_key=sts_credentials['Credentials']['SecretAccessKey'],
+                              aws_session_token=sts_credentials['Credentials']['SessionToken'],
+                              region_name=region)
+
         self.boto = session.client(u'ecs')
 
     def describe_services(self, cluster_name, service_name):

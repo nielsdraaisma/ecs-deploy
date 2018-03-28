@@ -19,8 +19,8 @@ def ecs():  # pragma: no cover
     pass
 
 
-def get_client(access_key_id, secret_access_key, region, profile):
-    return EcsClient(access_key_id, secret_access_key, region, profile)
+def get_client(access_key_id, secret_access_key, region, profile, assume_role):
+    return EcsClient(access_key_id, secret_access_key, region, profile, assume_role)
 
 
 @click.command()
@@ -35,6 +35,7 @@ def get_client(access_key_id, secret_access_key, region, profile):
 @click.option('--region', required=False, help='AWS region (e.g. eu-central-1)')
 @click.option('--access-key-id', required=False, help='AWS access key id')
 @click.option('--secret-access-key', required=False, help='AWS secret access key')
+@click.option('--assume-role', required=False, help='AWS IAM role to assume for deployment')
 @click.option('--profile', required=False, help='AWS configuration profile name')
 @click.option('--timeout', required=False, default=300, type=int, help='Amount of seconds to wait for deployment before command fails (default: 300)')
 @click.option('--ignore-warnings', is_flag=True, help='Do not fail deployment on warnings (port already in use or insufficient memory/CPU)')
@@ -45,7 +46,7 @@ def get_client(access_key_id, secret_access_key, region, profile):
 @click.option('--diff/--no-diff', default=True, help='Print which values were changed in the task definition (default: --diff)')
 @click.option('--deregister/--no-deregister', default=True, help='Deregister or keep the old task definition (default: --deregister)')
 @click.option('--rollback/--no-rollback', default=False, help='Rollback to previous revision, if deployment failed (default: --no-rollback)')
-def deploy(cluster, service, tag, image, command, env, role, task, region, access_key_id, secret_access_key, profile, timeout, newrelic_apikey, newrelic_appid, comment, user, ignore_warnings, diff, deregister, rollback):
+def deploy(cluster, service, tag, image, command, env, role, task, region, access_key_id, secret_access_key, assume_role, profile, timeout, newrelic_apikey, newrelic_appid, comment, user, ignore_warnings, diff, deregister, rollback):
     """
     Redeploy or modify a service.
 
@@ -59,7 +60,7 @@ def deploy(cluster, service, tag, image, command, env, role, task, region, acces
     """
 
     try:
-        client = get_client(access_key_id, secret_access_key, region, profile)
+        client = get_client(access_key_id, secret_access_key, region, profile, assume_role)
         deployment = DeployAction(client, cluster, service)
 
         td = get_task_definition(deployment, task)
